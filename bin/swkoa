@@ -1,0 +1,18 @@
+#!/usr/bin/env php
+<?php
+
+use Uccu\SwKoa\Config;
+use Uccu\SwKoa\Server as SwKoaServer;
+
+define("ROOT_PATH", realpath(__DIR__ . '/../../../..'));
+echo ROOT_PATH;
+
+die();
+
+$file = ROOT_PATH . '/vendor/autoload.php';
+if (!file_exists($file)) {
+    die("require composer autoload.php fail\n");
+}
+
+require $file;
+SwKoaServer::init();

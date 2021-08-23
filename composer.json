@@ -1,0 +1,32 @@
+{
+    "name": "uccu/swkoa",
+    "description": "a framework for PHP",
+    "keywords": [
+        "swkoa",
+        "swoole",
+        "koa",
+        "pzcat"
+    ],
+    "homepage": "https://github.com/uccu/swkoa",
+    "license": "MIT",
+    "authors": [{
+        "name": "pzcat",
+        "email": "cat@4moe.com"
+    }],
+    "require": {
+        "php": ">=7.3.0",
+        "ext-swoole": ">=4.4.4",
+        "vlucas/phpdotenv": "^5.3"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "^4.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Uccu\\SwKoa\\": "lib"
+        }
+    },
+    "bin": [
+        "bin/swkoa"
+    ]
+}
