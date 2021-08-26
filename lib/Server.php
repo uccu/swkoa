@@ -19,19 +19,19 @@ class Server
      */
     static public $logger;
 
-    static function setConfig(Config $conf)
+    static function setConfig($conf)
     {
         self::$config = $conf;
     }
 
-    static function setLog(Logger $logger)
+    static function setLog($logger)
     {
         self::$logger = $logger;
     }
 
     static function init()
     {
-        $ports = self::$config->get('PORTS');
+        $ports = self::$config::get('app.PORTS');
         if (!$ports) {
             throw new WsKoaException("pls specify the port!");
         }

@@ -19,7 +19,11 @@ class HttpServer
         $server->handle('/', function (Request $request, Response $response) {
             $pool = new MiddlewarePool;
 
-            $path = ROOT_PATH . '/Middleware.php';
+            if (!defined("ROOT_PATH")) {
+                define("ROOT_PATH", getcwd());
+            }
+
+            $path =  ROOT_PATH . '/Middleware.php';
             if (file_exists($path)) {
                 $middlewares = require($path);
                 foreach ($middlewares as $m) {

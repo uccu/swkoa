@@ -4,5 +4,5 @@ namespace Uccu\SwKoa;
 
 interface Config
 {
-    public function get(string $key);
+    public static function get(string $key);
 }
