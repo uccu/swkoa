@@ -11,7 +11,7 @@ class MiddlewarePool
         array_push($this->middleware, $m);
     }
 
-    function pop(): Middleware
+    function pop(): ?Middleware
     {
         return array_pop($this->middleware);
     }

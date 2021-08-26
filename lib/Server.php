@@ -4,7 +4,6 @@ namespace Uccu\SwKoa;
 
 use Swoole\Process;
 use Swoole\Process\Pool;
-use WsKoaException;
 
 class Server
 {
@@ -51,7 +50,7 @@ class Server
         while ($p = array_shift($portArr)) {
             $funcs[] = function (Pool $pool, int $workerId) use ($p) {
                 Server::$logger::setPool($pool, $workerId);
-                HttpServer::_execFunc($p);
+                HttpServer::_execFunc($p,$pool, $workerId);
             };
         }
 
