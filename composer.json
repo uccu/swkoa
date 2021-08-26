@@ -15,8 +15,7 @@
     }],
     "require": {
         "php": ">=7.3.0",
-        "ext-swoole": ">=4.4.4",
-        "vlucas/phpdotenv": "^5.3"
+        "ext-swoole": ">=4.4.4"
     },
     "require-dev": {
         "swoole/ide-helper": "^4.7"
@@ -25,8 +24,5 @@
         "psr-4": {
             "Uccu\\SwKoa\\": "lib"
         }
-    },
-    "bin": [
-        "bin/swkoa"
-    ]
+    }
 }

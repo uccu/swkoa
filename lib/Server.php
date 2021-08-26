@@ -2,14 +2,8 @@
 
 namespace Uccu\SwKoa;
 
-use Env\Env;
-use Swoole\Coroutine\Context as CoroutineContext;
+use Swoole\Process;
 use Swoole\Process\Pool;
-use Swoole\Coroutine\Http\Server as CoServer;
-use Swoole\Http\Request;
-use Swoole\Http\Response;
-use Uccu\SwKoa\Context;
-use Uccu\SwKoa\MiddlewarePool;
 use WsKoaException;
 
 class Server
@@ -20,9 +14,19 @@ class Server
      */
     static private $config;
 
+    /**
+     * @var Logger $logger
+     */
+    static public $logger;
+
     static function setConfig(Config $conf)
     {
         self::$config = $conf;
+    }
+
+    static function setLog(Logger $logger)
+    {
+        self::$logger = $logger;
     }
 
     static function init()
@@ -32,43 +36,34 @@ class Server
             throw new WsKoaException("pls specify the port!");
         }
 
-        $portArr = explode(',', $ports);
-        $cores = count($portArr);
-        if ($cores === 0) {
+        $portArr = array_map(function ($p) {
+            return intval($p);
+        }, explode(',', $ports));
+
+        if (count($portArr) === 0) {
             throw new WsKoaException("pls specify the port!");
         }
 
+        $funcs = [];
 
-        $pool = new Pool($cores, SWOOLE_IPC_UNIXSOCK, 0, true);
+        array_push($funcs, [Server::$logger, '_execFunc']);
 
+        while ($p = array_shift($portArr)) {
+            $funcs[] = function (Pool $pool, int $workerId) use ($p) {
+                Server::$logger::setPool($pool, $workerId);
+                HttpServer::_execFunc($p);
+            };
+        }
 
-        $pool->on('WorkerStart', function (Pool $pool, int $workerId) use ($portArr) {
-
-            $host = '127.0.0.1';
-            $port = $portArr[$workerId];
-            $server = new CoServer($host, $port);
-
-            $server->handle('/', function (Request $request, Response $response) use ($workerId) {
-                $pool = new MiddlewarePool;
-
-                $path = ROOT_PATH . '/Middleware.php';
-                if (file_exists($path)) {
-                    $middlewares = require($path);
-                    foreach ($middlewares as $m) {
-                        $pool->push(new $m);
-                    }
-                }
-
-                $ctx = new Context($request, $response, $workerId);
-
-                Context::generateNextFunc($ctx, $pool)();
+        $pool = new Pool(count($funcs), SWOOLE_IPC_UNIXSOCK, 0, true);
+        $pool->on('WorkerStart', function (Pool $pool, int $workerId) use ($funcs) {
+            Process::signal(SIGTERM, function () {
+                Server::$logger::info("worker SIGTERM", 'server');
             });
-
-            echo "开启服务:" . $host . ":" . $port . ", workerId:" . $workerId . "\n";
-            $server->start();
+            call_user_func($funcs[$workerId], $pool,  $workerId);
         });
-        $pool->on('WorkerStop', function (Pool $pool, $workerId) {
-            echo ("[Worker #{$workerId}] WorkerStop\n");
+        $pool->on('WorkerStop', function () {
+            Server::$logger::info("worker stop", 'server');
         });
         $pool->start();
     }
