@@ -15,7 +15,7 @@ class HttpServer
     public static function _execFunc(int $port, Pool $pool, int $workerId)
     {
         $host = '127.0.0.1';
-        $server = new CoServer($host, $port);
+        $server = new CoServer($host, $port, false, true);
 
         $server->handle('/', function (Request $request, Response $response) use ($pool, $workerId) {
             $middlewarePool = new MiddlewarePool;

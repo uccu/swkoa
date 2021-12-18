@@ -30,27 +30,28 @@ class Server
 
     static function init()
     {
-        $ports = self::$config::get('app.PORTS');
-        if (!$ports) {
-            throw new WsKoaException("pls specify the port!");
+        $port = self::$config::get('app.PORT');
+        if (!$port) {
+            $port = 9501;
         }
 
-        $portArr = array_map(function ($p) {
-            return intval($p);
-        }, explode(',', $ports));
+        $port = intval($port);
 
-        if (count($portArr) === 0) {
-            throw new WsKoaException("pls specify the port!");
+        $workerNum = self::$config::get('app.WORKER_NUM');
+        if (!$workerNum) {
+            $workerNum = swoole_cpu_num();
         }
+
+        $workerNum = intval($workerNum);
 
         $funcs = [];
 
         array_push($funcs, [Server::$logger, '_execFunc']);
 
-        while ($p = array_shift($portArr)) {
-            $funcs[] = function (Pool $pool, int $workerId) use ($p) {
+        for ($i = 0; $i++ < $workerNum;) {
+            $funcs[] = function (Pool $pool, int $workerId) use ($port) {
                 Server::$logger::setPool($pool, $workerId);
-                HttpServer::_execFunc($p,$pool, $workerId);
+                HttpServer::_execFunc($port, $pool, $workerId);
             };
         }
 
