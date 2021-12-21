@@ -2,11 +2,10 @@
 
 namespace Uccu\SwKoa;
 
-use Swoole\Process\Pool;
+use Psr\Log\LoggerInterface;
 
-interface Logger
+interface Logger extends LoggerInterface
 {
-    public static function info($logInfo, string $tag = '', int $level = 0);
-    public static function setPool(Pool $pool, int $workerId);
-    public static function _execFunc(Pool $pool, int $workerId);
+    public function setConfig(array $config);
+    public static function start(array $config);
 }
