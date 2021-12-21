@@ -9,11 +9,13 @@ use Swoole\Process\Pool;
 use Uccu\SwKoa\Context;
 use Uccu\SwKoa\MiddlewarePool;
 use Psr\Log\LoggerInterface;
-use Uccu\SwKoa\Plugin\PluginLoader;
+use Psr\Log\LoggerAwareInterface;
+use Swoole\Process\Manager;
+use Uccu\SwKoaPlugin\Plugin\PluginLoader;
+use Uccu\SwKoaPlugin\Plugin\PoolStartBeforePlugin;
 
-class HttpServer
+class HttpServer implements LoggerAwareInterface, PoolStartBeforePlugin
 {
-
 
     /**
      * @var PluginLoader
@@ -47,14 +49,6 @@ class HttpServer
     public function setLogger($logger)
     {
         $this->logger = $logger;
-        if (method_exists($logger, 'setConfig')) {
-            call_user_func([$logger, 'setConfig'], [
-                'pool' => $this->pool,
-                'workerId' => $this->workerId,
-                'tag' => 'http',
-                'importFile' => false
-            ]);
-        }
     }
 
     public function __construct(PluginLoader $pluginLoader)
@@ -62,31 +56,33 @@ class HttpServer
         $this->pluginLoader = $pluginLoader;
     }
 
-    public function poolStartBefore(PoolManager $poolManager)
+    public function poolStartBefore(Manager $manager)
     {
-        $poolManager->add(function (Pool $pool, int $workerId) {
+
+        $host = $this->config->get('app.HOST');
+        if (!$host) {
+            $host = "0.0.0.0";
+        }
+
+        $port = $this->config->get('app.PORT');
+        if (!$port) {
+            $port = 9501;
+        }
+
+        $port = intval($port);
+
+        $workerNum = $this->config->get('app.WORKER_NUM');
+        if (!$workerNum) {
+            $workerNum = swoole_cpu_num();
+        }
+
+        $workerNum = intval($workerNum);
+
+
+        $manager->addBatch($workerNum, function (Pool $pool, int $workerId) use ($host, $port) {
 
             $this->pool = $pool;
             $this->workerId = $workerId;
-
-            $port = $this->config->get('app.PORT');
-            if (!$port) {
-                $port = 9501;
-            }
-
-            $port = intval($port);
-
-            $workerNum = $this->config->get('app.WORKER_NUM');
-            if (!$workerNum) {
-                $workerNum = swoole_cpu_num();
-            }
-
-            $workerNum = intval($workerNum);
-
-            $host = $this->config->get('app.HOST');
-            if (!$host) {
-                $host = "0.0.0.0";
-            }
 
             $this->pluginLoader->httpServerStartBefore($this);
 

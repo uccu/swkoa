@@ -2,14 +2,42 @@
 
 namespace Uccu\SwKoa;
 
-use Uccu\SwKoa\Plugin\PluginLoader;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Uccu\SwKoaPlugin\Plugin\PluginLoader as PluginPluginLoader;
 
-class App
+class App implements LoggerAwareInterface
 {
+
+    /**
+     * @var Config $config
+     */
+    public static $config;
+
+    /**
+     * @var Config $config
+     */
+    public function setConfig($config)
+    {
+        App::$config = $config;
+    }
+
+    /**
+     * @var LoggerInterface $logger
+     */
+    public static $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger($logger)
+    {
+        App::$logger = $logger;
+    }
 
     public function start()
     {
-        $pluginLoader = new PluginLoader;
+        $pluginLoader = new PluginPluginLoader;
         $manager = new PoolManager;
 
         $pluginLoader->load();
@@ -18,5 +46,4 @@ class App
         $manager->start();
         $pluginLoader->poolStartAfter($manager);
     }
-    
 }
